@@ -130,8 +130,8 @@ class WifiCli(WifiController):
             version = cmd("nmcli --version").split()[-1]
             # On RHEL based systems, the version is in the form of 1.44.2-1.fc39
             # wich raises an error when trying to compare it with the Version class
-            if any(c.isalpha() for c in version):
-                version = version.split("-")[0]
+            # On Arch based systems the version is in the form of 1.44.2-1
+            version = version.split("-")[0]
             return (
                 Nmcli0990Wireless(password=self._password)
                 if Version(version) >= Version("0.9.9.0")
