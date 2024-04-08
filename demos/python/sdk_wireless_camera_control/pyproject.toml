@@ -52,6 +52,8 @@ opencv-python = { version = "^4", optional = true }
 Pillow = {version= "^9", optional = true}
 pytz = "*"
 tzlocal = "*"
+pyobjc-framework-corewlan = {version = "<10.0", markers = "sys_platform == 'darwin'"}
+pyobjc-framework-corelocation = {version = "<10.0", markers = "sys_platform == 'darwin'"}
 
 [tool.poetry.extras]
 gui = ["opencv-python", "pillow"]
