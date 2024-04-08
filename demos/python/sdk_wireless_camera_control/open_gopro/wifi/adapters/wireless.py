@@ -679,33 +679,47 @@ class NetworksetupWireless(WifiController):
         Returns:
             bool: [description]
         """
+
+        import objc
+        from CoreWLAN import CWInterface
+        from CoreLocation import CLLocationManager
+
         # Escape single quotes
         ssid = ssid.replace(r"'", '''"'"''')
 
         logger.info(f"Scanning for {ssid}...")
         start = time.time()
         discovered = False
-        while not discovered and (time.time() - start) <= timeout:
-            # Scan for network
-            # Surprisingly, yes this is the industry standard location for this and no, there's no shortcut for it
-            response = cmd(
-                r"/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport --scan"
-            )
-            # TODO Sometimes the response is blank?
-            if not response:
-                logger.warning("MacOS did not return a response to SSID scanning.")
-                continue
-            lines = response.splitlines()
-            ssid_end_index = lines[0].index("SSID") + 4  # Find where the SSID column ends
 
-            for result in lines[1:]:  # Skip title row
-                current_ssid = result[:ssid_end_index].strip()
-                if current_ssid == ssid.strip():
-                    discovered = True
+        while not discovered and (time.time() - start) <= timeout:
+
+            # Grant Location Services as required to get SSID from CoreWLAN
+            location_manager = CLLocationManager.alloc().init()
+            location_manager.startUpdatingLocation()
+
+            # Load CoreWLAN framework
+            objc.loadBundle('CoreWLAN',
+                            bundle_path='/System/Library/Frameworks/CoreWLAN.framework',
+                            module_globals=globals())
+
+            # Create a CWInterface object
+            interface = CWInterface.interface()
+
+            # Scan for networks
+            error = None
+            networks, error = interface.scanForNetworksWithSSID_error_(None, None)
+
+            if error:
+                logger.error(f"Error scanning for Wi-Fi networks: {error}")
+            else:
+                for network in networks:
+                    logger.debug(f"Scanned SSID: {network.ssid()}")
+                    if ssid.strip() in network.ssid():
+                        discovered = True
+                        break
+                if discovered:
                     break
-            if discovered:
-                break
-            time.sleep(1)
+                time.sleep(1)
         else:
             logger.warning("Wifi Scan timed out")
             return False
