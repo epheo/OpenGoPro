@@ -726,6 +726,18 @@ class NetworksetupWireless(WifiController):
             location_manager = CLLocationManager.alloc().init()
             location_manager.startUpdatingLocation()
 
+            # Get the current authorization status for Python
+            max_wait = 60
+            for i in range(1, max_wait):
+                authorization_status = location_manager.authorizationStatus()
+                if authorization_status == 3 or authorization_status == 4:
+                    print("Python has been authorized for location services")
+                    break
+                if i == max_wait-1:
+                    exit("Unable to obtain authorization, exiting")
+                time.sleep(1)
+
+
             # Load CoreWLAN framework
             objc.loadBundle('CoreWLAN',
                             bundle_path='/System/Library/Frameworks/CoreWLAN.framework',
