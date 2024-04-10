@@ -713,8 +713,8 @@ class NetworksetupWireless(WifiController):
         from CoreWLAN import CWInterface
         from CoreLocation import CLLocationManager
 
-        # Escape single quotes
-        ssid = ssid.replace(r"'", '''"'"''')
+        # Escape single quotes # I don't think this is still needed
+        # ssid = ssid.replace(r"'", '''"'"''')
 
         logger.info(f"Scanning for {ssid}...")
         start = time.time()
@@ -731,17 +731,18 @@ class NetworksetupWireless(WifiController):
             for i in range(1, max_wait):
                 authorization_status = location_manager.authorizationStatus()
                 if authorization_status == 3 or authorization_status == 4:
-                    print("Python has been authorized for location services")
+                    logger.debug("Program has been authorized for location services")
                     break
                 if i == max_wait-1:
-                    exit("Unable to obtain authorization, exiting")
+                    logger.warning("Unable to obtain authorization, exiting")
+                    return False
                 time.sleep(1)
 
 
             # Load CoreWLAN framework
             objc.loadBundle('CoreWLAN',
                             bundle_path='/System/Library/Frameworks/CoreWLAN.framework',
-                            module_globals=globals())
+                            module_globals=globals() )
 
             # Create a CWInterface object
             interface = CWInterface.interface()
@@ -754,10 +755,14 @@ class NetworksetupWireless(WifiController):
                 logger.error(f"Error scanning for Wi-Fi networks: {error}")
             else:
                 for network in networks:
-                    logger.debug(f"Scanned SSID: {network.ssid()}")
-                    if ssid.strip() in network.ssid():
-                        discovered = True
-                        break
+                    if network.ssid() is None:
+                        logger.warning("Skipping network with no SSID")
+                    else:
+                        logger.debug(f"Scanned SSID: {network.ssid()}")
+                        if ssid == network.ssid():
+                            logger.debug(f"Found matching SSID: {ssid}")
+                            discovered = True
+                            break
                 if discovered:
                     break
                 time.sleep(1)
