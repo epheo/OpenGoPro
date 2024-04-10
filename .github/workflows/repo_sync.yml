@@ -4,8 +4,6 @@
 name: Synchronize with external repo
 
 on:
-    schedule:
-        - cron: '*/15 * * * *'
     workflow_dispatch:
 
 jobs:
